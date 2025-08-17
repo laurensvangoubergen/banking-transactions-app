@@ -13,7 +13,11 @@ class CSVParser {
                 delimiter: ';',
                 header: true,
                 skipEmptyLines: true,
-                encoding: 'UTF-8'
+                encoding: 'UTF-8',
+                transformHeader: (header) => {
+                    // Clean up headers - remove BOM and trim whitespace
+                    return header.replace(/^\uFEFF/, '').trim();
+                }
             };
             
             const parsed = Papa.parse(csvContent, parseConfig);
@@ -29,29 +33,22 @@ class CSVParser {
             const rows = parsed.data;
             const transactions = [];
             
-            // Find the header row (starts with "Rekening")
-            let dataStartIndex = 0;
+            console.log(`📄 Processing ${rows.length} rows from CSV`);
+            console.log(`🔍 Headers found:`, Object.keys(rows[0] || {}));
+            
+            // Process data rows - each row should be a transaction
             for (let i = 0; i < rows.length; i++) {
-                const firstCell = Object.values(rows[i])[0];
-                if (firstCell && firstCell.toString().startsWith('BE')) {
-                    dataStartIndex = i;
-                    break;
-                }
-            }
-            
-            if (dataStartIndex === 0) {
-                return {
-                    success: false,
-                    error: 'Could not find transaction data in CSV file'
-                };
-            }
-            
-            // Process data rows
-            for (let i = dataStartIndex; i < rows.length; i++) {
                 const row = rows[i];
                 
                 // Skip empty rows
                 if (!row || !Object.values(row).some(val => val && val.toString().trim())) {
+                    continue;
+                }
+                
+                // Check if this looks like a valid transaction row (has account number)
+                const accountNumber = row['Rekening'] || Object.values(row)[0];
+                if (!accountNumber || !accountNumber.toString().startsWith('BE')) {
+                    console.log(`⚠️  Skipping row ${i + 1}: No valid account number found`);
                     continue;
                 }
                 
@@ -61,7 +58,7 @@ class CSVParser {
                         transactions.push(transaction);
                     }
                 } catch (error) {
-                    console.error(`Error parsing row ${i + 1}:`, error.message);
+                    console.error(`❌ Error parsing row ${i + 1}:`, error.message);
                     // Continue with other rows instead of failing completely
                 }
             }
@@ -69,11 +66,11 @@ class CSVParser {
             if (transactions.length === 0) {
                 return {
                     success: false,
-                    error: 'No valid transactions found in CSV file'
+                    error: 'No valid transactions found in CSV file. Please check the file format.'
                 };
             }
             
-            console.log(`📊 Parsed ${transactions.length} transactions from CSV`);
+            console.log(`✅ Successfully parsed ${transactions.length} transactions from CSV`);
             
             return {
                 success: true,
@@ -90,29 +87,27 @@ class CSVParser {
     }
     
     /**
-     * Parse a single transaction row
-     * @param {Object} row - CSV row object
+     * Parse a single transaction row using proper column mapping
+     * @param {Object} row - CSV row object with headers as keys
      * @returns {Object|null} Parsed transaction or null if invalid
      */
     parseTransactionRow(row) {
-        // Get values by expected column order (based on your CSV structure)
-        const values = Object.values(row);
-        
-        const accountNumber = values[0]?.toString().trim();
-        const bookingDateStr = values[1]?.toString().trim();
-        const statementNumber = values[2]?.toString().trim();
-        const transactionNumber = values[3]?.toString().trim();
-        const counterpartAccount = values[4]?.toString().trim();
-        const counterpartName = values[5]?.toString().trim();
-        const counterpartAddress = values[6]?.toString().trim();
-        const counterpartPostalCode = values[7]?.toString().trim();
-        const transactionType = values[8]?.toString().trim();
-        const valueDateStr = values[9]?.toString().trim();
-        const amountStr = values[10]?.toString().trim();
-        const currency = values[11]?.toString().trim() || 'EUR';
-        const bic = values[12]?.toString().trim();
-        const countryCode = values[13]?.toString().trim();
-        const description = values[14]?.toString().trim();
+        // Map CSV columns to our expected fields based on Belfius format
+        const accountNumber = row['Rekening']?.toString().trim();
+        const bookingDateStr = row['Boekingsdatum']?.toString().trim();
+        const statementNumber = row['Rekeninguittrekselnummer']?.toString().trim();
+        const transactionNumber = row['Transactienummer']?.toString().trim();
+        const counterpartAccount = row['Rekening tegenpartij']?.toString().trim();
+        const counterpartName = row['Naam tegenpartij bevat']?.toString().trim();
+        const counterpartAddress = row['Straat en nummer']?.toString().trim();
+        const counterpartPostalCode = row['Postcode en plaats']?.toString().trim();
+        const transactionType = row['Transactie']?.toString().trim();
+        const valueDateStr = row['Valutadatum']?.toString().trim();
+        const amountStr = row['Bedrag']?.toString().trim();
+        const currency = row['Devies']?.toString().trim() || 'EUR';
+        const bic = row['BIC']?.toString().trim();
+        const countryCode = row['Landcode']?.toString().trim();
+        const description = row['Mededelingen']?.toString().trim();
         
         // Skip rows without essential data
         if (!accountNumber || !bookingDateStr || !amountStr) {

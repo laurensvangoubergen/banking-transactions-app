@@ -412,6 +412,17 @@ body {
     margin-bottom: 1rem;
 }
 
+.category-tag {
+    display: inline-block;
+    background: var(--primary-light, #e0e0e0);
+    color: var(--primary-dark, #333);
+    padding: 2px 6px;
+    margin: 2px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+
 /* Pagination */
 .pagination {
     display: flex;
