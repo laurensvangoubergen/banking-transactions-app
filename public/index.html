@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Transactions Manager</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-university"></i> Banking Transactions Manager</h1>
+                <p class="subtitle">Import and manage your Belgian bank statements</p>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <!-- Upload Section -->
+            <section class="upload-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-upload"></i> Upload Bank Statement</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="upload-area" id="uploadArea">
+                            <div class="upload-content">
+                                <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                                <p class="upload-text">
+                                    <strong>Choose CSV file</strong> or drag and drop here
+                                </p>
+                                <p class="upload-subtext">Supports Belgian bank CSV format (Belfius, etc.)</p>
+                                <input type="file" id="csvFileInput" accept=".csv" class="file-input">
+                                <button class="btn btn-primary" id="uploadBtn">
+                                    <i class="fas fa-plus"></i> Select File
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Upload Progress -->
+                        <div class="upload-progress" id="uploadProgress" style="display: none;">
+                            <div class="progress-bar">
+                                <div class="progress-fill" id="progressFill"></div>
+                            </div>
+                            <p class="progress-text" id="progressText">Processing...</p>
+                        </div>
+                        
+                        <!-- Upload Results -->
+                        <div class="upload-results" id="uploadResults" style="display: none;">
+                            <div class="results-summary" id="resultsSummary"></div>
+                            <div class="results-errors" id="resultsErrors"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Statistics Section -->
+            <section class="stats-section">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon income">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalIncome">€0.00</div>
+                            <div class="stat-label">Total Income</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon expense">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalExpenses">€0.00</div>
+                            <div class="stat-label">Total Expenses</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon balance">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="netBalance">€0.00</div>
+                            <div class="stat-label">Net Balance</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon transactions">
+                            <i class="fas fa-list"></i>
+                        </div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalTransactions">0</div>
+                            <div class="stat-label">Transactions</div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filters and Search -->
+            <section class="filters-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-filter"></i> Filter Transactions</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="filters-grid">
+                            <div class="filter-group">
+                                <label for="accountFilter">Account</label>
+                                <select id="accountFilter" class="form-control">
+                                    <option value="">All Accounts</option>
+                                </select>
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="startDate">From Date</label>
+                                <input type="date" id="startDate" class="form-control">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="endDate">To Date</label>
+                                <input type="date" id="endDate" class="form-control">
+                            </div>
+                            
+                            <div class="filter-group">
+                                <label for="searchText">Search</label>
+                                <input type="text" id="searchText" class="form-control" placeholder="Search descriptions...">
+                            </div>
+                            
+                            <div class="filter-actions">
+                                <button class="btn btn-secondary" id="applyFilters">
+                                    <i class="fas fa-search"></i> Apply Filters
+                                </button>
+                                <button class="btn btn-outline" id="clearFilters">
+                                    <i class="fas fa-times"></i> Clear
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Transactions Table -->
+            <section class="transactions-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-table"></i> Recent Transactions</h3>
+                        <div class="card-actions">
+                            <span class="transaction-count" id="transactionCount">0 transactions</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-container">
+                            <table class="transactions-table" id="transactionsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Counterpart</th>
+                                        <th>Description</th>
+                                        <th>Amount</th>
+                                        <th>Type</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="transactionsBody">
+                                    <tr class="no-data">
+                                        <td colspan="6">
+                                            <div class="no-data-content">
+                                                <i class="fas fa-inbox"></i>
+                                                <p>No transactions found. Upload a CSV file to get started!</p>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <!-- Pagination -->
+                        <div class="pagination" id="pagination" style="display: none;">
+                            <button class="btn btn-outline" id="prevPage" disabled>
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </button>
+                            <span class="pagination-info" id="paginationInfo">Page 1 of 1</span>
+                            <button class="btn btn-outline" id="nextPage" disabled>
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Import History Modal -->
+        <div class="modal" id="historyModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><i class="fas fa-history"></i> Import History</h3>
+                    <button class="modal-close" id="closeHistoryModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body" id="historyModalBody">
+                    <div class="loading">
+                        <i class="fas fa-spinner fa-spin"></i> Loading history...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

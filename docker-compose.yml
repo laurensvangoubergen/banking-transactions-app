@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  banking-app:
+    build: .
+    container_name: banking-transactions-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - ./uploads:/app/uploads
+      - ./logs:/app/logs
+    restart: unless-stopped
+    networks:
+      - banking-network
+
+networks:
+  banking-network:
+    driver: bridge
+
+volumes:
+  db_data:
